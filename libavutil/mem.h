@@ -604,4 +604,20 @@ void av_max_alloc(size_t max);
  * @}
  */
 
+void *ff_internal_malloc(size_t size);
+void *ff_internal_realloc(void *ptr, size_t size);
+void ff_internal_free(void *ptr);
+
+typedef struct AVCustomAllocator {
+    int min_align;
+    void * (*custom_malloc) (size_t size);
+    void * (*custom_realloc) (void * ptr, size_t size);
+    void (*custom_free)(void *ptr);
+} AVCustomAllocator;
+
+int av_install_malloc_provider(const AVCustomAllocator * allocator);
+
+int av_min_align(void);
+
+
 #endif /* AVUTIL_MEM_H */

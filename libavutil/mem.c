@@ -93,7 +93,7 @@ static int size_mult(size_t a, size_t b, size_t *r)
     return 0;
 }
 
-void *av_malloc(size_t size)
+void *ff_internal_malloc(size_t size)
 {
     void *ptr = NULL;
 
@@ -150,7 +150,7 @@ void *av_malloc(size_t size)
     return ptr;
 }
 
-void *av_realloc(void *ptr, size_t size)
+void *ff_internal_realloc(void *ptr, size_t size)
 {
     void *ret;
     if (size > atomic_load_explicit(&max_alloc_size, memory_order_relaxed))
@@ -233,7 +233,7 @@ int av_reallocp_array(void *ptr, size_t nmemb, size_t size)
     return 0;
 }
 
-void av_free(void *ptr)
+void ff_internal_free(void *ptr)
 {
 #if HAVE_ALIGNED_MALLOC
     _aligned_free(ptr);
@@ -566,3 +566,75 @@ int av_size_mult(size_t a, size_t b, size_t *r)
 {
     return size_mult(a, b, r);
 }
+
+static atomic_int_fast32_t nb_outstanding_alloc = ATOMIC_VAR_INIT(0);
+
+static AVCustomAllocator *g_allocator = NULL;
+
+int av_install_malloc_provider(const AVCustomAllocator * allocator) {
+
+    if ( allocator && 
+        ((allocator->min_align < ALIGN) || 
+        (!allocator->custom_malloc) ||
+        (!allocator->custom_realloc) ||
+        (!allocator->custom_free))) {
+        return AVERROR(EINVAL);
+    }
+    if (allocator == g_allocator) {
+        return 0;
+    }
+    atomic_int_fast32_t nb_allocs = atomic_fetch_add_explicit(&nb_outstanding_alloc,0,memory_order_relaxed);
+    if (nb_allocs > 0) {
+        return AVERROR(EBUSY);
+    }
+    atomic_store_explicit(&g_allocator,allocator,memory_order_relaxed);
+    return 0;
+}
+
+int av_min_align() {
+    return ALIGN;
+}
+
+void * av_malloc(size_t size) {
+    void * ret;
+    if (g_allocator) {
+        ret = g_allocator->custom_malloc(size);
+    } else {
+        ret = ff_internal_malloc(size);
+    }
+    if (ret) {
+        atomic_fetch_add_explicit(&nb_outstanding_alloc,1,memory_order_relaxed);
+    }
+    return ret;
+}
+
+void * av_realloc(void * ptr, size_t size) {
+    void * ret;
+    if (g_allocator) {
+        ret = g_allocator->custom_realloc(ptr,size);
+    } else {
+        ret = ff_internal_realloc(ptr,size);
+    }
+    if (ret) {
+        if (!ptr)
+            atomic_fetch_add_explicit(&nb_outstanding_alloc,1,memory_order_relaxed);
+    } else {
+        if (ptr)
+            atomic_fetch_add_explicit(&nb_outstanding_alloc,-1,memory_order_relaxed);
+    }
+    return ret;
+}
+
+void av_free(void *ptr) {
+    if (g_allocator) {
+        g_allocator->custom_free(ptr);
+    } else {
+        ff_internal_free(ptr);
+    }
+    if (ptr) {
+        atomic_fetch_add_explicit(&nb_outstanding_alloc,-1,memory_order_relaxed);
+    }
+}
+
+
+
