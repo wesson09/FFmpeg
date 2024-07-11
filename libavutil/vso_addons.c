@@ -3,6 +3,7 @@
 #include <string.h>
 #include "vso_addons.h"
 #include "internal.h"
+#include "hwcontext_internal.h"
 
 #include "libavcodec/hwconfig.h"
 #include "libavcodec/hwaccels.h"
@@ -22,7 +23,7 @@
 #define STRUCT_ITEM_DECL(sname, fname) { .typename = AV_STRINGIFY(sname) , \
   .filename = fname , \
   .size = sizeof(sname) , \
-  .fields = (const avstruct_field_item *)&sname ##_field_list \
+  .fields = (const avstruct_field_descriptor *)&sname ##_field_list \
   }
 
 #define STRUCT_ITEM_DECL_NF(sname, fname) { .typename = AV_STRINGIFY(sname) , \
@@ -39,105 +40,116 @@
 
 #include "vso_struct_rtti.c"
 
-static const avstruct_size_item struct_list[] = {
+static const avstruct_descriptor struct_list[] = {
 
     /* libavutil/hwcontext.h */
-    STRUCT_ITEM_DECL_NF(AVHWDeviceContext,"libavutil/hwcontext.h"),
-    STRUCT_ITEM_DECL_NF(AVHWFramesContext,"libavutil/hwcontext.h"),
-    STRUCT_ITEM_DECL_NF(AVHWFramesConstraints,"libavutil/hwcontext.h"),
+    STRUCT_ITEM_DECL(AVHWDeviceContext,"libavutil/hwcontext.h"),
+    STRUCT_ITEM_DECL(AVHWFramesContext,"libavutil/hwcontext.h"),
+    STRUCT_ITEM_DECL(AVHWFramesConstraints,"libavutil/hwcontext.h"),
+
+    STRUCT_ITEM_DECL(HWContextType,"libavutil/hwcontext_internal.h"),
+    STRUCT_ITEM_DECL(AVHWDeviceInternal,"libavutil/hwcontext_internal.h"),
+    STRUCT_ITEM_DECL(AVHWFramesInternal,"libavutil/hwcontext_internal.h"),
+    STRUCT_ITEM_DECL(HWMapDescriptor,"libavutil/hwcontext_internal.h"),
+    
     /* libavutil/frame.h */
     STRUCT_ITEM_DECL(AVFrameSideData,"libavutil/frame.h"),
-    STRUCT_ITEM_DECL_NF(AVRegionOfInterest,"libavutil/frame.h"),
+    STRUCT_ITEM_DECL(AVRegionOfInterest,"libavutil/frame.h"),
     STRUCT_ITEM_DECL(AVFrame,"libavutil/frame.h"),
-    /* libavutil/avio.h */
-    STRUCT_ITEM_DECL(AVIOInterruptCB,"libavutil/avio.h"),
-    STRUCT_ITEM_DECL_NF(AVIODirEntry,"libavutil/avio.h"),
-    STRUCT_ITEM_DECL_NF(AVIODirContext,"libavutil/avio.h"),
-    STRUCT_ITEM_DECL(AVIOContext,"libavutil/avio.h"),
+    
     /* libavutil/channel_layout.h */
-    STRUCT_ITEM_DECL_NF(AVChannelLayout,"libavutil/channel_layout.h"),
+    STRUCT_ITEM_DECL(AVChannelLayout,"libavutil/channel_layout.h"),
     STRUCT_ITEM_DECL(AVChannelCustom,"libavutil/channel_layout.h"),
 
 
     /* libavcodec/packet.h */
     STRUCT_ITEM_DECL(AVPacket,"libavcodec/packet.h"),
     STRUCT_ITEM_DECL(AVPacketSideData,"libavcodec/packet.h"),
+    
     /* libavcodec/avcodec.h */
     STRUCT_ITEM_DECL(RcOverride,"libavcodec/avcodec.h"),
     STRUCT_ITEM_DECL(AVCodecContext,"libavcodec/avcodec.h"),
     STRUCT_ITEM_DECL(AVHWAccel,"libavcodec/avcodec.h"),
     STRUCT_ITEM_DECL(AVSubtitleRect,"libavcodec/avcodec.h"),
     STRUCT_ITEM_DECL(AVSubtitle,"libavcodec/avcodec.h"),
-    STRUCT_ITEM_DECL_NF(AVCodecParserContext,"libavcodec/avcodec.h"),
-    STRUCT_ITEM_DECL_NF(AVCodecParser,"libavcodec/avcodec.h"),
-    STRUCT_ITEM_DECL(AVCodec,"libavcodec/avcodec.h"),
+    STRUCT_ITEM_DECL(AVCodecParserContext,"libavcodec/avcodec.h"),
+    STRUCT_ITEM_DECL(AVCodecParser,"libavcodec/avcodec.h"),
+    
     /* libavcodec/codec.h */
     STRUCT_ITEM_DECL(AVProfile,"libavcodec/codec.h"),
     STRUCT_ITEM_DECL(AVCodec,"libavcodec/codec.h"),
     STRUCT_ITEM_DECL(AVCodecHWConfig,"libavcodec/codec.h"),
+    
     /* libavcodec/hwconfig.h */
-    STRUCT_ITEM_DECL_NF(AVCodecHWConfigInternal,"libavcodec/hwconfig.h"),
+    STRUCT_ITEM_DECL(AVCodecHWConfigInternal,"libavcodec/hwconfig.h"),
+    
     /* libavcodec/hwaccel_internal.h */
     STRUCT_ITEM_DECL(FFHWAccel,"libavcodec/hwaccel_internal.h"),
 
 
+    /* libavformat/avio.h */
+    STRUCT_ITEM_DECL(AVIOInterruptCB,"libavformat/avio.h"),
+    STRUCT_ITEM_DECL(AVIODirEntry,"libavformat/avio.h"),
+    STRUCT_ITEM_DECL(AVIODirContext,"libavformat/avio.h"),
+    STRUCT_ITEM_DECL(AVIOContext,"libavformat/avio.h"),
+
     /* libavformat/avformat.h */
-    STRUCT_ITEM_DECL_NF(AVProbeData,"libavformat/avformat.h"),
+    STRUCT_ITEM_DECL(AVProbeData,"libavformat/avformat.h"),
     STRUCT_ITEM_DECL(AVOutputFormat,"libavformat/avformat.h"),
     STRUCT_ITEM_DECL(AVInputFormat,"libavformat/avformat.h"),
-    STRUCT_ITEM_DECL_NF(AVIndexEntry,"libavformat/avformat.h"),
+    STRUCT_ITEM_DECL(AVIndexEntry,"libavformat/avformat.h"),
     STRUCT_ITEM_DECL(AVStream,"libavformat/avformat.h"),
     STRUCT_ITEM_DECL(AVStreamGroup,"libavformat/avformat.h"),
     STRUCT_ITEM_DECL(AVProgram,"libavformat/avformat.h"),
     STRUCT_ITEM_DECL(AVChapter,"libavformat/avformat.h"),
     STRUCT_ITEM_DECL(AVFormatContext,"libavformat/avformat.h"),
+    
     /* libavformat/mux.h */
-    STRUCT_ITEM_DECL_NF(FFOutputFormat,"libavformat/mux.h"),
+    STRUCT_ITEM_DECL(FFOutputFormat,"libavformat/mux.h"),
+    
     /* libavformat/internal.h */
     STRUCT_ITEM_DECL(AVCodecTag,"libavformat/internal.h"),
-    STRUCT_ITEM_DECL_NF(CodecMime,"libavformat/internal.h"),
-    STRUCT_ITEM_DECL_NF(FFFrac,"libavformat/internal.h"),
-    STRUCT_ITEM_DECL_NF(FFFormatContext,"libavformat/internal.h"),
-    STRUCT_ITEM_DECL_NF(FFStream,"libavformat/internal.h"),
-    STRUCT_ITEM_DECL_NF(FFStreamGroup,"libavformat/internal.h"),
+    STRUCT_ITEM_DECL(CodecMime,"libavformat/internal.h"),
+    STRUCT_ITEM_DECL(FFFrac,"libavformat/internal.h"),
+    STRUCT_ITEM_DECL(FFFormatContext,"libavformat/internal.h"),
+    STRUCT_ITEM_DECL(FFStream,"libavformat/internal.h"),
+    STRUCT_ITEM_DECL(FFStreamGroup,"libavformat/internal.h"),
+    
     /* libavformat/url.h */
-    STRUCT_ITEM_DECL_NF(URLContext,"libavformat/url.h"),
-    STRUCT_ITEM_DECL_NF(URLProtocol,"libavformat/url.h"),
-    STRUCT_ITEM_DECL_NF(URLComponents,"libavformat/url.h"),
+    STRUCT_ITEM_DECL(URLContext,"libavformat/url.h"),
+    STRUCT_ITEM_DECL(URLProtocol,"libavformat/url.h"),
+    STRUCT_ITEM_DECL(URLComponents,"libavformat/url.h"),
+    
     /* libavformat/avio_internal.h */
-    STRUCT_ITEM_DECL_NF(FFIOContext,"libavformat/avio_internal.h"),
+    STRUCT_ITEM_DECL(FFIOContext,"libavformat/avio_internal.h"),
+
 
    { NULL }
 };
 
-const avstruct_size_item * av_struct_list(void) {
-    return (const avstruct_size_item *)&struct_list;
+const avstruct_descriptor * av_get_struct_list(void) {
+    return (const avstruct_descriptor *)&struct_list;
 }
 
-int av_struct_sizeof(const char * struct_name) {
-    const avstruct_size_item * litem;
+
+const avstruct_descriptor * av_get_struct_descriptor(const char * type_name) {
+    const avstruct_descriptor * litem;
     int nlen; 
-    if (!struct_name) return 0;
-    litem = (const avstruct_size_item *)&struct_list;
-    nlen = strlen(struct_name);
+    if (!type_name) return 0;
+    litem = (const avstruct_descriptor *)&struct_list;
+    nlen = strlen(type_name);
     for ( ;litem->typename; litem++) {
         int ilen = strlen(litem->typename);
-        if (strncmp(litem->typename,struct_name, (nlen > ilen ? ilen:nlen) + 1 ) == 0) {
-            return litem->size;
+        if (strncmp(litem->typename,type_name, (nlen > ilen ? ilen:nlen) + 1 ) == 0) {
+            return litem;
         }
     }
     return 0;
 }
 
-
-const avstruct_field_item * av_struct_fields(const char * struct_name) {
-
-    if (strncmp(struct_name,"AVFrame",8) == 0) {        
-        return (const avstruct_field_item *)&AVFrame_field_list;
-    }
-    if (strncmp(struct_name,"AVChannelLayout",8) == 0) {        
-        return (const avstruct_field_item *)&AVChannelLayout_field_list;
-    }
-    return NULL;
-
+int av_get_struct_size(const char * type_name) {
+    const avstruct_descriptor * litem = av_get_struct_descriptor(type_name);
+    if (litem) 
+        return litem->size;
+    return 0;
 }
