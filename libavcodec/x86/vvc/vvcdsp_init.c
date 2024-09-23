@@ -102,6 +102,7 @@ DMVR_PROTOTYPES( 8, avx2)
 DMVR_PROTOTYPES(10, avx2)
 DMVR_PROTOTYPES(12, avx2)
 
+#if ARCH_X86_64
 void ff_vvc_apply_bdof_avx2(uint8_t *dst, ptrdiff_t dst_stride,                                     \
     const int16_t *src0, const int16_t *src1, int w, int h, int pixel_max);                         \
 
@@ -115,6 +116,7 @@ static void ff_vvc_apply_bdof_##bd##_##opt(uint8_t *dst, ptrdiff_t dst_stride,  
 OF_PROTOTYPES( 8, avx2)
 OF_PROTOTYPES(10, avx2)
 OF_PROTOTYPES(12, avx2)
+#endif
 
 #define ALF_BPC_PROTOTYPES(bpc, opt)                                                                                     \
 void BF(ff_vvc_alf_filter_luma, bpc, opt)(uint8_t *dst, ptrdiff_t dst_stride,                                            \
