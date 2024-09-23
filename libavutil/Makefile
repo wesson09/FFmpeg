@@ -175,6 +175,7 @@ OBJS = adler32.o                                                        \
        threadmessage.o                                                  \
        time.o                                                           \
        timecode.o                                                       \
+       timestamp.o                                                      \
        tree.o                                                           \
        twofish.o                                                        \
        utils.o                                                          \
@@ -273,6 +274,7 @@ TESTPROGS = adler32                                                     \
             ripemd                                                      \
             sha                                                         \
             sha512                                                      \
+            side_data_array                                             \
             softfloat                                                   \
             tree                                                        \
             twofish                                                     \
