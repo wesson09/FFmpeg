@@ -48,8 +48,6 @@ static const avstruct_descriptor struct_list[] = {
     STRUCT_ITEM_DECL(AVHWFramesConstraints,"libavutil/hwcontext.h"),
 
     STRUCT_ITEM_DECL(HWContextType,"libavutil/hwcontext_internal.h"),
-    STRUCT_ITEM_DECL(AVHWDeviceInternal,"libavutil/hwcontext_internal.h"),
-    STRUCT_ITEM_DECL(AVHWFramesInternal,"libavutil/hwcontext_internal.h"),
     STRUCT_ITEM_DECL(HWMapDescriptor,"libavutil/hwcontext_internal.h"),
     
     /* libavutil/frame.h */
@@ -90,7 +88,6 @@ static const avstruct_descriptor struct_list[] = {
     /* libavformat/avio.h */
     STRUCT_ITEM_DECL(AVIOInterruptCB,"libavformat/avio.h"),
     STRUCT_ITEM_DECL(AVIODirEntry,"libavformat/avio.h"),
-    STRUCT_ITEM_DECL(AVIODirContext,"libavformat/avio.h"),
     STRUCT_ITEM_DECL(AVIOContext,"libavformat/avio.h"),
 
     /* libavformat/avformat.h */
