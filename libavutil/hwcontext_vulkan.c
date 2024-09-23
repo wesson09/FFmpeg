@@ -422,7 +422,7 @@ static const VulkanOptExtension optional_instance_exts[] = {
 static const VulkanOptExtension optional_device_exts[] = {
     /* Misc or required by other extensions */
     { VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME,               FF_VK_EXT_NO_FLAG                },
-    { VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,                  FF_VK_EXT_NO_FLAG                },
+    { VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,                  FF_VK_EXT_PUSH_DESCRIPTOR        },
     { VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME,                FF_VK_EXT_DESCRIPTOR_BUFFER,     },
     { VK_EXT_PHYSICAL_DEVICE_DRM_EXTENSION_NAME,              FF_VK_EXT_DEVICE_DRM             },
     { VK_EXT_SHADER_ATOMIC_FLOAT_EXTENSION_NAME,              FF_VK_EXT_ATOMIC_FLOAT           },
@@ -578,6 +578,12 @@ static int check_extensions(AVHWDeviceContext *ctx, int dev, AVDictionary *opts,
     for (int i = 0; i < optional_exts_num; i++) {
         tstr = optional_exts[i].name;
         found = 0;
+
+        if (dev && debug_mode &&
+            !strcmp(tstr, VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME)) {
+            continue;
+        }
+
         for (int j = 0; j < sup_ext_count; j++) {
             if (!strcmp(tstr, sup_ext[j].extensionName)) {
                 found = 1;
@@ -798,11 +804,11 @@ end:
 }
 
 /* Creates a VkInstance */
-static int create_instance(AVHWDeviceContext *ctx, AVDictionary *opts)
+static int create_instance(AVHWDeviceContext *ctx, AVDictionary *opts,
+                           enum FFVulkanDebugMode *debug_mode)
 {
     int err = 0;
     VkResult ret;
-    enum FFVulkanDebugMode debug_mode;
     VulkanDevicePriv *p = ctx->hwctx;
     AVVulkanDeviceContext *hwctx = &p->p;
     FFVulkanFunctions *vk = &p->vkctx.vkfn;
@@ -839,20 +845,20 @@ static int create_instance(AVHWDeviceContext *ctx, AVDictionary *opts)
     }
 
     err = check_layers(ctx, opts, &inst_props.ppEnabledLayerNames,
-                       &inst_props.enabledLayerCount, &debug_mode);
+                       &inst_props.enabledLayerCount, debug_mode);
     if (err)
         goto fail;
 
     /* Check for present/missing extensions */
     err = check_extensions(ctx, 0, opts, &inst_props.ppEnabledExtensionNames,
-                           &inst_props.enabledExtensionCount, debug_mode);
+                           &inst_props.enabledExtensionCount, *debug_mode);
     hwctx->enabled_inst_extensions = inst_props.ppEnabledExtensionNames;
     hwctx->nb_enabled_inst_extensions = inst_props.enabledExtensionCount;
     if (err < 0)
         goto fail;
 
     /* Enable debug features if needed */
-    if (debug_mode == FF_VULKAN_DEBUG_VALIDATE) {
+    if (*debug_mode == FF_VULKAN_DEBUG_VALIDATE) {
         static const VkValidationFeatureEnableEXT feat_list_validate[] = {
             VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT,
             VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_RESERVE_BINDING_SLOT_EXT,
@@ -861,7 +867,7 @@ static int create_instance(AVHWDeviceContext *ctx, AVDictionary *opts)
         validation_features.pEnabledValidationFeatures = feat_list_validate;
         validation_features.enabledValidationFeatureCount = FF_ARRAY_ELEMS(feat_list_validate);
         inst_props.pNext = &validation_features;
-    } else if (debug_mode == FF_VULKAN_DEBUG_PRINTF) {
+    } else if (*debug_mode == FF_VULKAN_DEBUG_PRINTF) {
         static const VkValidationFeatureEnableEXT feat_list_debug[] = {
             VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT,
             VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_RESERVE_BINDING_SLOT_EXT,
@@ -870,7 +876,7 @@ static int create_instance(AVHWDeviceContext *ctx, AVDictionary *opts)
         validation_features.pEnabledValidationFeatures = feat_list_debug;
         validation_features.enabledValidationFeatureCount = FF_ARRAY_ELEMS(feat_list_debug);
         inst_props.pNext = &validation_features;
-    } else if (debug_mode == FF_VULKAN_DEBUG_PRACTICES) {
+    } else if (*debug_mode == FF_VULKAN_DEBUG_PRACTICES) {
         static const VkValidationFeatureEnableEXT feat_list_practices[] = {
             VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT,
             VK_VALIDATION_FEATURE_ENABLE_BEST_PRACTICES_EXT,
@@ -908,9 +914,9 @@ static int create_instance(AVHWDeviceContext *ctx, AVDictionary *opts)
     }
 
     /* Setup debugging callback if needed */
-    if ((debug_mode == FF_VULKAN_DEBUG_VALIDATE) ||
-        (debug_mode == FF_VULKAN_DEBUG_PRINTF) ||
-        (debug_mode == FF_VULKAN_DEBUG_PRACTICES)) {
+    if ((*debug_mode == FF_VULKAN_DEBUG_VALIDATE) ||
+        (*debug_mode == FF_VULKAN_DEBUG_PRINTF) ||
+        (*debug_mode == FF_VULKAN_DEBUG_PRACTICES)) {
         VkDebugUtilsMessengerCreateInfoEXT dbg = {
             .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
             .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
@@ -1403,6 +1409,7 @@ static int vulkan_device_create_internal(AVHWDeviceContext *ctx,
     VulkanDevicePriv *p = ctx->hwctx;
     AVVulkanDeviceContext *hwctx = &p->p;
     FFVulkanFunctions *vk = &p->vkctx.vkfn;
+    enum FFVulkanDebugMode debug_mode = FF_VULKAN_DEBUG_NONE;
 
     /*
      * VkPhysicalDeviceVulkan12Features has a timelineSemaphore field, but
@@ -1460,7 +1467,7 @@ static int vulkan_device_create_internal(AVHWDeviceContext *ctx,
     ctx->free = vulkan_device_free;
 
     /* Create an instance if not given one */
-    if ((err = create_instance(ctx, opts)))
+    if ((err = create_instance(ctx, opts, &debug_mode)))
         goto end;
 
     /* Find a device (if not given one) */
@@ -1529,7 +1536,7 @@ static int vulkan_device_create_internal(AVHWDeviceContext *ctx,
 
     /* Find and enable extensions */
     if ((err = check_extensions(ctx, 1, opts, &dev_info.ppEnabledExtensionNames,
-                                &dev_info.enabledExtensionCount, 0))) {
+                                &dev_info.enabledExtensionCount, debug_mode))) {
         for (int i = 0; i < dev_info.queueCreateInfoCount; i++)
             av_free((void *)dev_info.pQueueCreateInfos[i].pQueuePriorities);
         av_free((void *)dev_info.pQueueCreateInfos);
@@ -2695,7 +2702,8 @@ static int vulkan_frames_init(AVHWFramesContext *hwfc)
      * If there's no profile list, or it has no encode operations,
      * then allow creating the image with no specific profile. */
     if ((hwctx->usage & VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR) &&
-        p->video_maint_1_features.videoMaintenance1) {
+        (p->vkctx.extensions & (FF_VK_EXT_VIDEO_ENCODE_QUEUE |
+                                FF_VK_EXT_VIDEO_MAINTENANCE_1))) {
         const VkVideoProfileListInfoKHR *pl;
         pl = ff_vk_find_struct(hwctx->create_pnext, VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR);
         if (!pl) {
