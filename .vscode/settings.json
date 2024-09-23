@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "avformat.h": "c",
-        "typeinfo": "c",
-        "internal.h": "c",
-        "hwaccels.h": "c",
-        "stddef.h": "c"
-    }
-}
