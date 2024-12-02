@@ -1534,18 +1534,26 @@ void ff_estimate_b_frame_motion(MpegEncContext * s,
         dmin= INT_MAX;
 
 // FIXME penalty stuff for non-MPEG-4
-    c->skip=0;
-    fmin = estimate_motion_b(s, mb_x, mb_y, s->b_forw_mv_table, 0, s->f_code) +
-           3 * c->mb_penalty_factor;
+    if (s->pp_time) {
+        c->skip=0;
+        fmin = estimate_motion_b(s, mb_x, mb_y, s->b_forw_mv_table, 0, s->f_code) +
+                   3 * c->mb_penalty_factor;
 
-    c->skip=0;
-    bmin = estimate_motion_b(s, mb_x, mb_y, s->b_back_mv_table, 2, s->b_code) +
-           2 * c->mb_penalty_factor;
-    ff_dlog(s, " %d %d ", s->b_forw_mv_table[xy][0], s->b_forw_mv_table[xy][1]);
+        c->skip=0;
+        bmin = estimate_motion_b(s, mb_x, mb_y, s->b_back_mv_table, 2, s->b_code) +
+                2 * c->mb_penalty_factor;
+        ff_dlog(s, " %d %d ", s->b_forw_mv_table[xy][0], s->b_forw_mv_table[xy][1]);
 
-    c->skip=0;
-    fbmin= bidir_refine(s, mb_x, mb_y) + c->mb_penalty_factor;
-    ff_dlog(s, "%d %d %d %d\n", dmin, fmin, bmin, fbmin);
+        c->skip=0;
+        fbmin= bidir_refine(s, mb_x, mb_y) + c->mb_penalty_factor;
+        ff_dlog(s, "%d %d %d %d\n", dmin, fmin, bmin, fbmin);
+        type = CANDIDATE_MB_TYPE_FORWARD;
+    } else {
+        fmin = bmin = fbmin = INT_MAX;
+        type = CANDIDATE_MB_TYPE_BACKWARD;
+    }
+
+
 
     if (s->avctx->flags & AV_CODEC_FLAG_INTERLACED_ME) {
 //FIXME mb type penalty
@@ -1561,10 +1569,9 @@ void ff_estimate_b_frame_motion(MpegEncContext * s,
     }else
         fimin= bimin= INT_MAX;
 
+    if (fmin < INT_MAX) 
     {
         int score= fmin;
-        type = CANDIDATE_MB_TYPE_FORWARD;
-
         if (dmin <= score){
             score = dmin;
             type = CANDIDATE_MB_TYPE_DIRECT;
