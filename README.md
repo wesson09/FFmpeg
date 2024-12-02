@@ -1,3 +1,12 @@
+FFmpeg fork to help using shared libraries in Delphi
+=============
+This fork is designed to simplify the use of FFmpeg shared libaries in Embarcadero Delphi. 
+It provide some additions to install a custom memory manager instead of the default one from
+msvcrtl.dll, and some functions to check that record fields in Delphi are in sync with struct 
+fields in FFmpeg.
+
+It is a work in progress.
+
 FFmpeg README
 =============
 
