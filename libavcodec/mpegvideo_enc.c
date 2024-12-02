@@ -93,6 +93,8 @@ static int dct_quantize_c(MpegEncContext *s,
                           int qscale, int *overflow);
 static int dct_quantize_trellis_c(MpegEncContext *s, int16_t *block, int n, int qscale, int *overflow);
 
+static int ff_side_data_set_encoder_infos(AVPacket *pkt, const MpegEncContext *s);
+
 static uint8_t default_mv_penalty[MAX_FCODE + 1][MAX_DMV * 2 + 1];
 static uint8_t default_fcode_tab[MAX_MV * 2 + 1];
 
@@ -1790,6 +1792,37 @@ static void frame_start(MpegEncContext *s)
     }
 }
 
+
+static int ff_side_data_set_encoder_infos(AVPacket *pkt, const MpegEncContext *s)
+{
+    MpegEncInfo *infos;
+    uint8_t *side_data;
+    size_t side_data_size;
+
+    side_data = av_packet_get_side_data(pkt, AV_PKT_DATA_MPEGENC_CODED_FRAME_INFO, &side_data_size);
+    if (!side_data) {
+        side_data_size = sizeof(MpegEncInfo);
+        side_data = av_packet_new_side_data(pkt, AV_PKT_DATA_MPEGENC_CODED_FRAME_INFO,
+                                            side_data_size);
+    }
+
+    if (!side_data || side_data_size < sizeof(MpegEncInfo))
+        return AVERROR(ENOMEM);
+
+    infos = (MpegEncInfo *)side_data;
+    infos->picture_in_gop_number    = s->picture_in_gop_number;
+    infos->input_picture_number     = s->input_picture_number;
+    infos->coded_picture_number     = s->coded_picture_number;
+    infos->picture_number           = s->picture_number;
+    infos->pict_type                = s->pict_type;  
+    infos->vbv_delay                = s->vbv_delay;
+    infos->top_field_first          = s->top_field_first;
+    infos->repeat_first_field       = s->repeat_first_field;
+    infos->gop_size                 = s->gop_size;
+    infos->intra_only               = s->intra_only;
+    return 0;
+}
+
 int ff_mpv_encode_picture(AVCodecContext *avctx, AVPacket *pkt,
                           const AVFrame *pic_arg, int *got_packet)
 {
@@ -1847,7 +1880,7 @@ vbv_retry:
 
         frame_end(s);
 
-       if ((CONFIG_MJPEG_ENCODER || CONFIG_AMV_ENCODER) && s->out_format == FMT_MJPEG)
+        if ((CONFIG_MJPEG_ENCODER || CONFIG_AMV_ENCODER) && s->out_format == FMT_MJPEG)
             ff_mjpeg_encode_picture_trailer(&s->pb, s->header_bits);
 
         if (avctx->rc_buffer_size) {
@@ -1894,6 +1927,8 @@ vbv_retry:
                                        s->encoding_error,
                                        (avctx->flags&AV_CODEC_FLAG_PSNR) ? MPV_MAX_PLANES : 0,
                                        s->pict_type);
+        
+        ff_side_data_set_encoder_infos(pkt,s);
 
         if (avctx->flags & AV_CODEC_FLAG_PASS1)
             assert(put_bits_count(&s->pb) == s->header_bits + s->mv_bits +

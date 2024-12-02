@@ -345,6 +345,8 @@ enum AVPacketSideDataType {
      */
     AV_PKT_DATA_LCEVC,
 
+    AV_PKT_DATA_MPEGENC_CODED_FRAME_INFO,
+
     /**
      * The number of side data types.
      * This is not part of the public API/ABI in the sense that it may
@@ -355,6 +357,20 @@ enum AVPacketSideDataType {
      */
     AV_PKT_DATA_NB
 };
+
+typedef struct MpegEncInfo {
+    int input_picture_number;    ///< used to set pic->display_picture_number, should not be used for/by anything else
+    int coded_picture_number;    ///< used to set pic->coded_picture_number, should not be used for/by anything else
+    int picture_number;          //FIXME remove, unclear definition
+    int picture_in_gop_number;   ///< 0-> first pic in gop, ...
+    int pict_type;               ///< AV_PICTURE_TYPE_I, AV_PICTURE_TYPE_P, AV_PICTURE_TYPE_B, ...
+    int vbv_delay;
+    int top_field_first;
+    int repeat_first_field;
+    int gop_size;
+    int intra_only;   ///< if true, only intra pictures are generated
+} MpegEncInfo;
+
 
 #if FF_API_QUALITY_FACTOR
 #define AV_PKT_DATA_QUALITY_FACTOR AV_PKT_DATA_QUALITY_STATS //DEPRECATED

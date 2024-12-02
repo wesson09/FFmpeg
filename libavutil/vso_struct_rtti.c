@@ -7,7 +7,7 @@
    exactly the declared c struct.
    Do not edit / modify this file, unless you know exactly what you are doing
 */
-/* built 09/24/2024 12:27:43 from libavutil version 59.38.100 */
+/* built 09/26/2024 21:27:19 from libavutil version 59.38.100 */
 FF_DISABLE_DEPRECATION_WARNINGS
 
 static const avstruct_field_descriptor AVHWDeviceContext_field_list[] = {
@@ -330,12 +330,13 @@ static const avstruct_field_descriptor AVCodecContext_field_list[] = {
   STRUCT_FIELD_DECL(AVCodecContext,codec_descriptor), 
   STRUCT_FIELD_DECL(AVCodecContext,sub_charenc), 
   STRUCT_FIELD_DECL(AVCodecContext,sub_charenc_mode), 
-  STRUCT_FIELD_DECL(AVCodecContext,subtitle_header), 
   STRUCT_FIELD_DECL(AVCodecContext,subtitle_header_size), 
+  STRUCT_FIELD_DECL(AVCodecContext,subtitle_header), 
   STRUCT_FIELD_DECL(AVCodecContext,dump_separator), 
   STRUCT_FIELD_DECL(AVCodecContext,codec_whitelist), 
   STRUCT_FIELD_DECL(AVCodecContext,coded_side_data), 
   STRUCT_FIELD_DECL(AVCodecContext,nb_coded_side_data), 
+  STRUCT_FIELD_DECL(AVCodecContext,export_side_data), 
   STRUCT_FIELD_DECL(AVCodecContext,max_pixels), 
   STRUCT_FIELD_DECL(AVCodecContext,apply_cropping), 
   STRUCT_FIELD_DECL(AVCodecContext,discard_damaged_percentage), 
@@ -366,10 +367,10 @@ static const avstruct_field_descriptor AVSubtitleRect_field_list[] = {
   STRUCT_FIELD_DECL(AVSubtitleRect,nb_colors), 
   STRUCT_FIELD_DECL(AVSubtitleRect,data), 
   STRUCT_FIELD_DECL(AVSubtitleRect,linesize), 
+  STRUCT_FIELD_DECL(AVSubtitleRect,flags), 
   STRUCT_FIELD_DECL(AVSubtitleRect,type), 
   STRUCT_FIELD_DECL(AVSubtitleRect,text), 
   STRUCT_FIELD_DECL(AVSubtitleRect,ass), 
-  STRUCT_FIELD_DECL(AVSubtitleRect,flags), 
   { NULL } 
 };
 
@@ -836,6 +837,7 @@ static const avstruct_field_descriptor FFStream_field_list[] = {
   STRUCT_FIELD_DECL(FFStream,first_dts), 
   STRUCT_FIELD_DECL(FFStream,cur_dts), 
   STRUCT_FIELD_DECL(FFStream,codec_desc), 
+  STRUCT_FIELD_DECL(FFStream,transferred_mux_tb), 
   { NULL } 
 };
 
