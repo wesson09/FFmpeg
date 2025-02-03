@@ -1205,13 +1205,7 @@ static int load_input_picture(MpegEncContext *s, const AVFrame *pic_arg)
                 }
 
                 if (!s->low_delay && display_picture_number == 1)
-                {
-                    if (s->max_b_frames > 0) {
-                        s->dts_delta = s->max_b_frames;
-                    } else {
-                        s->dts_delta = pts - last;
-                    }
-                }
+                    s->dts_delta = pts - last;
             }
             s->user_specified_pts = pts;
         } else {
@@ -1557,28 +1551,13 @@ static int set_bframe_chain_length(MpegEncContext *s)
         }
     }
 
-    if (!s->next_pic.ptr) {
-        if (s->intra_only || (s->b_frame_strategy != 3)) {
-            s->reordered_input_picture[0] = s->input_picture[0];
-            s->input_picture[0] = NULL;
-            s->reordered_input_picture[0]->f->pict_type = AV_PICTURE_TYPE_I;
-            s->reordered_input_picture[0]->coded_picture_number = s->coded_picture_number++;
-        } else {
-            int b_frames = s->max_b_frames;
-
-            s->reordered_input_picture[0] = s->input_picture[b_frames];
-            s->input_picture[b_frames] = NULL;
-            s->reordered_input_picture[0]->f->pict_type = AV_PICTURE_TYPE_I;
-            s->reordered_input_picture[0]->coded_picture_number = s->coded_picture_number++;
-
-            for (int i = 0; i < b_frames; i++) {
-                s->reordered_input_picture[i + 1] = s->input_picture[i];
-                s->input_picture[i]               = NULL;
-                s->reordered_input_picture[i + 1]->f->pict_type = AV_PICTURE_TYPE_B;
-                s->reordered_input_picture[i + 1]->coded_picture_number = s->coded_picture_number++;
-            }
-        }
-
+    if (/*s->picture_in_gop_number >= s->gop_size ||*/
+        !s->next_pic.ptr || s->intra_only) {
+        s->reordered_input_picture[0] = s->input_picture[0];
+        s->input_picture[0] = NULL;
+        s->reordered_input_picture[0]->f->pict_type = AV_PICTURE_TYPE_I;
+        s->reordered_input_picture[0]->coded_picture_number =
+            s->coded_picture_number++;
     } else {
         int b_frames = 0;
 
@@ -1598,7 +1577,7 @@ static int set_bframe_chain_length(MpegEncContext *s)
             }
         }
 
-        if ((s->b_frame_strategy == 0) || (s->b_frame_strategy == 3))  {
+        if (s->b_frame_strategy == 0) {
             b_frames = s->max_b_frames;
             while (b_frames && !s->input_picture[b_frames])
                 b_frames--;
@@ -1647,7 +1626,7 @@ static int set_bframe_chain_length(MpegEncContext *s)
             av_log(s->avctx, AV_LOG_ERROR,
                     "warning, too many B-frames in a row\n");
         }
-       
+
         if (s->picture_in_gop_number + b_frames >= s->gop_size) {
             if ((s->mpv_flags & FF_MPV_FLAG_STRICT_GOP) &&
                 s->gop_size > s->picture_in_gop_number) {
@@ -2042,19 +2021,14 @@ vbv_retry:
 
         pkt->pts = s->cur_pic.ptr->f->pts;
         pkt->duration = s->cur_pic.ptr->f->duration;
-        if (s->b_frame_strategy == 3) {
-            pkt->dts = s->cur_pic.ptr->coded_picture_number - s->dts_delta;
-        } else {
-            if (!s->low_delay && s->pict_type != AV_PICTURE_TYPE_B) {
-                if (!s->cur_pic.ptr->coded_picture_number)
-                    pkt->dts = pkt->pts - s->dts_delta;
-                else
-                    pkt->dts = s->reordered_pts;
-                s->reordered_pts = pkt->pts;
-            } else
-                pkt->dts = pkt->pts;
-        }
-        
+        if (!s->low_delay && s->pict_type != AV_PICTURE_TYPE_B) {
+            if (!s->cur_pic.ptr->coded_picture_number)
+                pkt->dts = pkt->pts - s->dts_delta;
+            else
+                pkt->dts = s->reordered_pts;
+            s->reordered_pts = pkt->pts;
+        } else
+            pkt->dts = pkt->pts;
 
         // the no-delay case is handled in generic code
         if (avctx->codec->capabilities & AV_CODEC_CAP_DELAY) {
@@ -3636,9 +3610,9 @@ static void set_frame_distances(MpegEncContext * s){
     if(s->pict_type==AV_PICTURE_TYPE_B){
         s->pb_time= s->pp_time - (s->last_non_b_time - s->time);
         av_assert1(s->pb_time > 0 && s->pb_time < s->pp_time);
-    }else if(s->pict_type==AV_PICTURE_TYPE_P){
-        s->pp_time= s->cur_pic.ptr->f->pts - s->last_non_b_time;
-        s->last_non_b_time= s->cur_pic.ptr->f->pts;
+    }else{
+        s->pp_time= s->time - s->last_non_b_time;
+        s->last_non_b_time= s->time;
         av_assert1(s->picture_number==0 || s->pp_time > 0);
     }
 }
