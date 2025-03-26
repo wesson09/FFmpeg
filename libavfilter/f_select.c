@@ -501,27 +501,27 @@ static const AVFilterPad avfilter_af_aselect_inputs[] = {
     },
 };
 
-const AVFilter ff_af_aselect = {
-    .name        = "aselect",
-    .description = NULL_IF_CONFIG_SMALL("Select audio frames to pass in output."),
+const FFFilter ff_af_aselect = {
+    .p.name        = "aselect",
+    .p.description = NULL_IF_CONFIG_SMALL("Select audio frames to pass in output."),
+    .p.priv_class  = &aselect_class,
+    .p.flags       = AVFILTER_FLAG_DYNAMIC_OUTPUTS,
     .init        = aselect_init,
     .uninit      = uninit,
     .priv_size   = sizeof(SelectContext),
     FILTER_INPUTS(avfilter_af_aselect_inputs),
-    .priv_class  = &aselect_class,
-    .flags       = AVFILTER_FLAG_DYNAMIC_OUTPUTS,
 };
 #endif /* CONFIG_ASELECT_FILTER */
 
 #if CONFIG_SELECT_FILTER
 
-static int query_formats(AVFilterContext *ctx)
+static int query_formats(const AVFilterContext *ctx,
+                         AVFilterFormatsConfig **cfg_in,
+                         AVFilterFormatsConfig **cfg_out)
 {
-    SelectContext *select = ctx->priv;
+    const SelectContext *select = ctx->priv;
 
-    if (!select->do_scene_detect) {
-        return ff_default_query_formats(ctx);
-    } else {
+    if (select->do_scene_detect) {
         static const enum AVPixelFormat pix_fmts[] = {
             AV_PIX_FMT_RGB24, AV_PIX_FMT_BGR24, AV_PIX_FMT_RGBA,
             AV_PIX_FMT_ABGR, AV_PIX_FMT_BGRA, AV_PIX_FMT_GRAY8,
@@ -530,8 +530,9 @@ static int query_formats(AVFilterContext *ctx)
             AV_PIX_FMT_YUV420P10,
             AV_PIX_FMT_NONE
         };
-        return ff_set_common_formats_from_list(ctx, pix_fmts);
+        return ff_set_common_formats_from_list2(ctx, cfg_in, cfg_out, pix_fmts);
     }
+    return 0;
 }
 
 DEFINE_OPTIONS(select, AV_OPT_FLAG_VIDEO_PARAM|AV_OPT_FLAG_FILTERING_PARAM);
@@ -556,15 +557,15 @@ static const AVFilterPad avfilter_vf_select_inputs[] = {
     },
 };
 
-const AVFilter ff_vf_select = {
-    .name          = "select",
-    .description   = NULL_IF_CONFIG_SMALL("Select video frames to pass in output."),
+const FFFilter ff_vf_select = {
+    .p.name        = "select",
+    .p.description = NULL_IF_CONFIG_SMALL("Select video frames to pass in output."),
+    .p.priv_class  = &select_class,
+    .p.flags       = AVFILTER_FLAG_DYNAMIC_OUTPUTS | AVFILTER_FLAG_METADATA_ONLY,
     .init          = select_init,
     .uninit        = uninit,
     .priv_size     = sizeof(SelectContext),
-    .priv_class    = &select_class,
     FILTER_INPUTS(avfilter_vf_select_inputs),
-    FILTER_QUERY_FUNC(query_formats),
-    .flags         = AVFILTER_FLAG_DYNAMIC_OUTPUTS | AVFILTER_FLAG_METADATA_ONLY,
+    FILTER_QUERY_FUNC2(query_formats),
 };
 #endif /* CONFIG_SELECT_FILTER */

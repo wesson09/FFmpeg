@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/internal.h"
 #include "libavutil/opt.h"
 #include "libavutil/mem.h"
 
@@ -130,12 +131,12 @@ static int init_pic_rc(AVCodecContext *avctx, FFHWBaseEncodePicture *pic,
         .consecutiveBFrameCount = FFMAX(ctx->base.b_per_p - 1, 0),
         .temporalLayerCount = 0,
     };
-
     rc_info->pNext = &hp->vkrc_info;
-    rc_info->virtualBufferSizeInMs = enc->unit_opts.hrd_buffer_size;
-    rc_info->initialVirtualBufferSizeInMs = enc->unit_opts.initial_buffer_fullness;
 
     if (rc_info->rateControlMode > VK_VIDEO_ENCODE_RATE_CONTROL_MODE_DISABLED_BIT_KHR) {
+        rc_info->virtualBufferSizeInMs = (enc->unit_opts.hrd_buffer_size * 1000LL) / avctx->bit_rate;
+        rc_info->initialVirtualBufferSizeInMs = (enc->unit_opts.initial_buffer_fullness * 1000LL) / avctx->bit_rate;
+
         hp->vkrc_layer_info = (VkVideoEncodeH264RateControlLayerInfoKHR) {
             .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_RATE_CONTROL_LAYER_INFO_KHR,
 
@@ -1144,7 +1145,7 @@ static int init_base_units(AVCodecContext *avctx)
         if (!data)
             return AVERROR(ENOMEM);
     } else {
-        av_log(avctx, AV_LOG_ERROR, "Unable to get feedback for H.264 units = %lu\n", data_size);
+        av_log(avctx, AV_LOG_ERROR, "Unable to get feedback for H.264 units = %"SIZE_SPECIFIER"\n", data_size);
         return err;
     }
 
@@ -1657,10 +1658,7 @@ const FFCodec ff_h264_vulkan_encoder = {
                       AV_CODEC_CAP_ENCODER_REORDERED_OPAQUE,
     .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
     .defaults       = vulkan_encode_h264_defaults,
-    .p.pix_fmts = (const enum AVPixelFormat[]) {
-        AV_PIX_FMT_VULKAN,
-        AV_PIX_FMT_NONE,
-    },
+    CODEC_PIXFMTS(AV_PIX_FMT_VULKAN),
     .hw_configs     = ff_vulkan_encode_hw_configs,
     .p.wrapper_name = "vulkan",
 };
