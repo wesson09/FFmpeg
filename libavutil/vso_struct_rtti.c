@@ -7,8 +7,10 @@
    exactly the declared c struct.
    Do not edit / modify this file, unless you know exactly what you are doing
 */
-/* built 09/26/2024 21:27:19 from libavutil version 59.38.100 */
+/* built 03/26/2025 13:48:02 from libavutil version 59.60.100 */
 FF_DISABLE_DEPRECATION_WARNINGS
+
+#include "../libavformat/avformat_internal.h"
 
 static const avstruct_field_descriptor AVHWDeviceContext_field_list[] = {
   STRUCT_FIELD_DECL(AVHWDeviceContext,av_class), 
@@ -616,6 +618,7 @@ static const avstruct_field_descriptor AVStreamGroup_field_list[] = {
   STRUCT_FIELD_DECL(AVStreamGroup,metadata), 
   STRUCT_FIELD_DECL(AVStreamGroup,nb_streams), 
   STRUCT_FIELD_DECL(AVStreamGroup,streams), 
+  STRUCT_FIELD_DECL(AVStreamGroup,disposition), 
   { NULL } 
 };
 
@@ -764,26 +767,15 @@ static const avstruct_field_descriptor FFFrac_field_list[] = {
 
 static const avstruct_field_descriptor FFFormatContext_field_list[] = {
   STRUCT_FIELD_DECL(FFFormatContext,pub), 
-  STRUCT_FIELD_DECL(FFFormatContext,nb_interleaved_streams), 
   STRUCT_FIELD_DECL(FFFormatContext,avoid_negative_ts_status), 
-  STRUCT_FIELD_DECL(FFFormatContext,interleave_packet), 
   STRUCT_FIELD_DECL(FFFormatContext,packet_buffer), 
   STRUCT_FIELD_DECL(FFFormatContext,data_offset), 
-  STRUCT_FIELD_DECL(FFFormatContext,raw_packet_buffer), 
-  STRUCT_FIELD_DECL(FFFormatContext,parse_queue), 
   STRUCT_FIELD_DECL(FFFormatContext,parse_pkt), 
   STRUCT_FIELD_DECL(FFFormatContext,pkt), 
-  STRUCT_FIELD_DECL(FFFormatContext,raw_packet_buffer_size), 
-  STRUCT_FIELD_DECL(FFFormatContext,missing_ts_warning), 
   STRUCT_FIELD_DECL(FFFormatContext,inject_global_side_data), 
   STRUCT_FIELD_DECL(FFFormatContext,avoid_negative_ts_use_pts), 
-  STRUCT_FIELD_DECL(FFFormatContext,shortest_end), 
-  STRUCT_FIELD_DECL(FFFormatContext,initialized), 
-  STRUCT_FIELD_DECL(FFFormatContext,streams_initialized), 
   STRUCT_FIELD_DECL(FFFormatContext,id3v2_meta), 
-  STRUCT_FIELD_DECL(FFFormatContext,prefer_codec_framerate), 
-  STRUCT_FIELD_DECL(FFFormatContext,chapter_ids_monotonic), 
-  STRUCT_FIELD_DECL(FFFormatContext,metafree), 
+  STRUCT_FIELD_DECL(FFFormatContext,missing_streams), 
   { NULL } 
 };
 

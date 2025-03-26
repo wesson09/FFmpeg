@@ -1950,16 +1950,10 @@ static int ff_side_data_set_encoder_infos(AVPacket *pkt, const MpegEncContext *s
         return AVERROR(ENOMEM);
 
     infos = (MpegEncInfo *)side_data;
-    infos->picture_in_gop_number    = s->picture_in_gop_number;
-    infos->input_picture_number     = s->input_picture_number;
-    infos->coded_picture_number     = s->coded_picture_number;
     infos->picture_number           = s->picture_number;
     infos->pict_type                = s->pict_type;  
-    infos->vbv_delay                = s->vbv_delay;
     infos->top_field_first          = s->top_field_first;
     infos->repeat_first_field       = s->repeat_first_field;
-    infos->gop_size                 = s->gop_size;
-    infos->intra_only               = s->intra_only;
     return 0;
 }
 
@@ -2069,7 +2063,7 @@ vbv_retry:
                                        (avctx->flags&AV_CODEC_FLAG_PSNR) ? MPV_MAX_PLANES : 0,
                                        s->c.pict_type);
         
-        ff_side_data_set_encoder_infos(pkt,s);
+        ff_side_data_set_encoder_infos(pkt,&s->c);
 
         if (avctx->flags & AV_CODEC_FLAG_PASS1)
             assert(put_bits_count(&s->pb) == m->header_bits + s->mv_bits +

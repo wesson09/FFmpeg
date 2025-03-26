@@ -359,16 +359,10 @@ enum AVPacketSideDataType {
 };
 
 typedef struct MpegEncInfo {
-    int input_picture_number;    ///< used to set pic->display_picture_number, should not be used for/by anything else
-    int coded_picture_number;    ///< used to set pic->coded_picture_number, should not be used for/by anything else
     int picture_number;          //FIXME remove, unclear definition
-    int picture_in_gop_number;   ///< 0-> first pic in gop, ...
     int pict_type;               ///< AV_PICTURE_TYPE_I, AV_PICTURE_TYPE_P, AV_PICTURE_TYPE_B, ...
-    int vbv_delay;
     int top_field_first;
     int repeat_first_field;
-    int gop_size;
-    int intra_only;   ///< if true, only intra pictures are generated
 } MpegEncInfo;
 
 

@@ -127,7 +127,6 @@ OF_FUNC( 8, avx2)
 OF_FUNC(10, avx2)
 OF_FUNC(12, avx2)
 #endif
-#endif
 
 #define ALF_BPC_PROTOTYPES(bpc, opt)                                                                                     \
 void BF(ff_vvc_alf_filter_luma, bpc, opt)(uint8_t *dst, ptrdiff_t dst_stride,                                            \
