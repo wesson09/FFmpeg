@@ -141,6 +141,29 @@ static const struct {
     { NV_ENC_ERR_RESOURCE_NOT_MAPPED,      AVERROR(EBADF),   "resource not mapped"      },
 };
 
+static int dump_binary_struct(const char *struct_name,void *struct_ref,int struct_size, int64_t index) {
+    char path[512];
+    FILE *dump_file;
+    if (!struct_ref || !struct_name) 
+        return 0;
+
+    if (index < 0)
+    {
+        snprintf(path,sizeof(path),"I:/tmp/ffmpeg_tmp/%s.FFmpeg",struct_name);
+    } else {
+        snprintf(path,sizeof(path),"I:/tmp/ffmpeg_tmp/%s.FFmpeg.%.6lld",struct_name,index);
+    }
+
+    dump_file = fopen(path,"wb");
+    if (dump_file) {
+        fwrite(struct_ref,struct_size,1,dump_file);
+        fclose(dump_file);
+        return 0;
+    }
+    return AVERROR(EACCES);
+}
+
+
 static int nvenc_map_error(NVENCSTATUS err, const char **desc)
 {
     int i;
@@ -398,6 +421,7 @@ static av_cold int nvenc_open_session(AVCodecContext *avctx)
         params.deviceType = NV_ENC_DEVICE_TYPE_CUDA;
     }
 
+//    dump_binary_struct("open_session_params",&params,sizeof(params),-1);
     ret = p_nvenc->nvEncOpenEncodeSessionEx(&params, &ctx->nvencoder);
     if (ret != NV_ENC_SUCCESS) {
         ctx->nvencoder = NULL;
@@ -1757,6 +1781,8 @@ FF_ENABLE_DEPRECATION_WARNINGS
     if (res < 0)
         return res;
 
+//    dump_binary_struct("encode_params",&ctx->init_encode_params,sizeof(NV_ENC_INITIALIZE_PARAMS),-1);
+//    dump_binary_struct("encode_config",ctx->init_encode_params.encodeConfig,sizeof(NV_ENC_CONFIG),-1);
     nv_status = p_nvenc->nvEncInitializeEncoder(ctx->nvencoder, &ctx->init_encode_params);
     if (nv_status != NV_ENC_SUCCESS) {
         nvenc_pop_context(avctx);
@@ -2783,6 +2809,7 @@ static int nvenc_send_frame(AVCodecContext *avctx, const AVFrame *frame)
     NvencContext *ctx = avctx->priv_data;
     NvencDynLoadFunctions *dl_fn = &ctx->nvenc_dload_funcs;
     NV_ENCODE_API_FUNCTION_LIST *p_nvenc = &dl_fn->nvenc_funcs;
+   
 
     NV_ENC_PIC_PARAMS pic_params = { 0 };
     pic_params.version = NV_ENC_PIC_PARAMS_VER;
@@ -2856,6 +2883,10 @@ static int nvenc_send_frame(AVCodecContext *avctx, const AVFrame *frame)
     if (res < 0)
         return res;
 
+//    if ((frame->pts >= 0) && (frame->pts <64)) {
+//        dump_binary_struct("pic_params",&pic_params,sizeof(pic_params),frame->pts);
+//    }
+//    
     nv_status = p_nvenc->nvEncEncodePicture(ctx->nvencoder, &pic_params);
 
     for (i = 0; i < sei_count; i++)
