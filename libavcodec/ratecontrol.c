@@ -950,7 +950,8 @@ float ff_rate_estimate_qscale(MpegEncContext *s, int dry_run)
         if (!dts_pic || dts_pic->f->pts == AV_NOPTS_VALUE)
             wanted_bits_double = s->bit_rate * (double)picture_number / fps;
         else
-            wanted_bits_double = s->bit_rate * (double)dts_pic->f->pts / fps;
+            wanted_bits_double = s->bit_rate * (double)dts_pic->display_picture_number / fps;
+//            wanted_bits_double = s->bit_rate * (double)dts_pic->f->pts / fps;
         if (wanted_bits_double > INT64_MAX) {
             av_log(s, AV_LOG_WARNING, "Bits exceed 64bit range\n");
             wanted_bits = INT64_MAX;
