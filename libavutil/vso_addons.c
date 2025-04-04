@@ -4,6 +4,7 @@
 #include "vso_addons.h"
 #include "internal.h"
 #include "hwcontext_internal.h"
+#include "log.h"
 
 #include "libavcodec/hwconfig.h"
 #include "libavcodec/hwaccels.h"
@@ -41,6 +42,9 @@
 #include "vso_struct_rtti.c"
 
 static const avstruct_descriptor struct_list[] = {
+
+    /* libavutil/log.h */
+    STRUCT_ITEM_DECL(AVClass,"libavutil/log.h"),
 
     /* libavutil/hwcontext.h */
     STRUCT_ITEM_DECL(AVHWDeviceContext,"libavutil/hwcontext.h"),
@@ -83,7 +87,6 @@ static const avstruct_descriptor struct_list[] = {
     
     /* libavcodec/hwaccel_internal.h */
     STRUCT_ITEM_DECL(FFHWAccel,"libavcodec/hwaccel_internal.h"),
-
 
     /* libavformat/avio.h */
     STRUCT_ITEM_DECL(AVIOInterruptCB,"libavformat/avio.h"),

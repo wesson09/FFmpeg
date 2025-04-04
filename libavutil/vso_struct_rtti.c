@@ -7,10 +7,26 @@
    exactly the declared c struct.
    Do not edit / modify this file, unless you know exactly what you are doing
 */
-/* built 03/26/2025 13:48:02 from libavutil version 59.60.100 */
+/* built 04/04/2025 13:47:22 from libavutil version 59.60.100 */
 FF_DISABLE_DEPRECATION_WARNINGS
 
 #include "../libavformat/avformat_internal.h"
+
+static const avstruct_field_descriptor AVClass_field_list[] = {
+  STRUCT_FIELD_DECL(AVClass,class_name), 
+  STRUCT_FIELD_DECL(AVClass,item_name), 
+  STRUCT_FIELD_DECL(AVClass,option), 
+  STRUCT_FIELD_DECL(AVClass,version), 
+  STRUCT_FIELD_DECL(AVClass,log_level_offset_offset), 
+  STRUCT_FIELD_DECL(AVClass,parent_log_context_offset), 
+  STRUCT_FIELD_DECL(AVClass,category), 
+  STRUCT_FIELD_DECL(AVClass,get_category), 
+  STRUCT_FIELD_DECL(AVClass,query_ranges), 
+  STRUCT_FIELD_DECL(AVClass,child_next), 
+  STRUCT_FIELD_DECL(AVClass,child_class_iterate), 
+  STRUCT_FIELD_DECL(AVClass,state_flags_offset), 
+  { NULL } 
+};
 
 static const avstruct_field_descriptor AVHWDeviceContext_field_list[] = {
   STRUCT_FIELD_DECL(AVHWDeviceContext,av_class), 
