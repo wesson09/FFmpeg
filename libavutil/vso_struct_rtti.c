@@ -7,8 +7,26 @@
    exactly the declared c struct.
    Do not edit / modify this file, unless you know exactly what you are doing
 */
-/* built 09/26/2024 21:27:19 from libavutil version 59.38.100 */
+/* built 08/06/2025 21:32:14 from libavutil version 60.7.100 */
 FF_DISABLE_DEPRECATION_WARNINGS
+
+#include "../libavformat/avformat_internal.h"
+
+static const avstruct_field_descriptor AVClass_field_list[] = {
+  STRUCT_FIELD_DECL(AVClass,class_name), 
+  STRUCT_FIELD_DECL(AVClass,item_name), 
+  STRUCT_FIELD_DECL(AVClass,option), 
+  STRUCT_FIELD_DECL(AVClass,version), 
+  STRUCT_FIELD_DECL(AVClass,log_level_offset_offset), 
+  STRUCT_FIELD_DECL(AVClass,parent_log_context_offset), 
+  STRUCT_FIELD_DECL(AVClass,category), 
+  STRUCT_FIELD_DECL(AVClass,get_category), 
+  STRUCT_FIELD_DECL(AVClass,query_ranges), 
+  STRUCT_FIELD_DECL(AVClass,child_next), 
+  STRUCT_FIELD_DECL(AVClass,child_class_iterate), 
+  STRUCT_FIELD_DECL(AVClass,state_flags_offset), 
+  { NULL } 
+};
 
 static const avstruct_field_descriptor AVHWDeviceContext_field_list[] = {
   STRUCT_FIELD_DECL(AVHWDeviceContext,av_class), 
@@ -105,7 +123,6 @@ static const avstruct_field_descriptor AVFrame_field_list[] = {
   STRUCT_FIELD_DECL(AVFrame,height), 
   STRUCT_FIELD_DECL(AVFrame,nb_samples), 
   STRUCT_FIELD_DECL(AVFrame,format), 
-  STRUCT_FIELD_DECL(AVFrame,key_frame), 
   STRUCT_FIELD_DECL(AVFrame,pict_type), 
   STRUCT_FIELD_DECL(AVFrame,sample_aspect_ratio), 
   STRUCT_FIELD_DECL(AVFrame,pts), 
@@ -114,9 +131,6 @@ static const avstruct_field_descriptor AVFrame_field_list[] = {
   STRUCT_FIELD_DECL(AVFrame,quality), 
   STRUCT_FIELD_DECL(AVFrame,opaque), 
   STRUCT_FIELD_DECL(AVFrame,repeat_pict), 
-  STRUCT_FIELD_DECL(AVFrame,interlaced_frame), 
-  STRUCT_FIELD_DECL(AVFrame,top_field_first), 
-  STRUCT_FIELD_DECL(AVFrame,palette_has_changed), 
   STRUCT_FIELD_DECL(AVFrame,sample_rate), 
   STRUCT_FIELD_DECL(AVFrame,buf), 
   STRUCT_FIELD_DECL(AVFrame,extended_buf), 
@@ -130,10 +144,8 @@ static const avstruct_field_descriptor AVFrame_field_list[] = {
   STRUCT_FIELD_DECL(AVFrame,colorspace), 
   STRUCT_FIELD_DECL(AVFrame,chroma_location), 
   STRUCT_FIELD_DECL(AVFrame,best_effort_timestamp), 
-  STRUCT_FIELD_DECL(AVFrame,pkt_pos), 
   STRUCT_FIELD_DECL(AVFrame,metadata), 
   STRUCT_FIELD_DECL(AVFrame,decode_error_flags), 
-  STRUCT_FIELD_DECL(AVFrame,pkt_size), 
   STRUCT_FIELD_DECL(AVFrame,hw_frames_ctx), 
   STRUCT_FIELD_DECL(AVFrame,opaque_ref), 
   STRUCT_FIELD_DECL(AVFrame,crop_top), 
@@ -212,7 +224,6 @@ static const avstruct_field_descriptor AVCodecContext_field_list[] = {
   STRUCT_FIELD_DECL(AVCodecContext,time_base), 
   STRUCT_FIELD_DECL(AVCodecContext,pkt_timebase), 
   STRUCT_FIELD_DECL(AVCodecContext,framerate), 
-  STRUCT_FIELD_DECL(AVCodecContext,ticks_per_frame), 
   STRUCT_FIELD_DECL(AVCodecContext,delay), 
   STRUCT_FIELD_DECL(AVCodecContext,width), 
   STRUCT_FIELD_DECL(AVCodecContext,height), 
@@ -319,7 +330,6 @@ static const avstruct_field_descriptor AVCodecContext_field_list[] = {
   STRUCT_FIELD_DECL(AVCodecContext,execute2), 
   STRUCT_FIELD_DECL(AVCodecContext,profile), 
   STRUCT_FIELD_DECL(AVCodecContext,level), 
-  STRUCT_FIELD_DECL(AVCodecContext,properties), 
   STRUCT_FIELD_DECL(AVCodecContext,skip_loop_filter), 
   STRUCT_FIELD_DECL(AVCodecContext,skip_idct), 
   STRUCT_FIELD_DECL(AVCodecContext,skip_frame), 
@@ -598,8 +608,6 @@ static const avstruct_field_descriptor AVStream_field_list[] = {
   STRUCT_FIELD_DECL(AVStream,metadata), 
   STRUCT_FIELD_DECL(AVStream,avg_frame_rate), 
   STRUCT_FIELD_DECL(AVStream,attached_pic), 
-  STRUCT_FIELD_DECL(AVStream,side_data), 
-  STRUCT_FIELD_DECL(AVStream,nb_side_data), 
   STRUCT_FIELD_DECL(AVStream,event_flags), 
   STRUCT_FIELD_DECL(AVStream,r_frame_rate), 
   STRUCT_FIELD_DECL(AVStream,pts_wrap_bits), 
@@ -616,6 +624,7 @@ static const avstruct_field_descriptor AVStreamGroup_field_list[] = {
   STRUCT_FIELD_DECL(AVStreamGroup,metadata), 
   STRUCT_FIELD_DECL(AVStreamGroup,nb_streams), 
   STRUCT_FIELD_DECL(AVStreamGroup,streams), 
+  STRUCT_FIELD_DECL(AVStreamGroup,disposition), 
   { NULL } 
 };
 
@@ -764,26 +773,14 @@ static const avstruct_field_descriptor FFFrac_field_list[] = {
 
 static const avstruct_field_descriptor FFFormatContext_field_list[] = {
   STRUCT_FIELD_DECL(FFFormatContext,pub), 
-  STRUCT_FIELD_DECL(FFFormatContext,nb_interleaved_streams), 
   STRUCT_FIELD_DECL(FFFormatContext,avoid_negative_ts_status), 
-  STRUCT_FIELD_DECL(FFFormatContext,interleave_packet), 
   STRUCT_FIELD_DECL(FFFormatContext,packet_buffer), 
   STRUCT_FIELD_DECL(FFFormatContext,data_offset), 
-  STRUCT_FIELD_DECL(FFFormatContext,raw_packet_buffer), 
-  STRUCT_FIELD_DECL(FFFormatContext,parse_queue), 
   STRUCT_FIELD_DECL(FFFormatContext,parse_pkt), 
   STRUCT_FIELD_DECL(FFFormatContext,pkt), 
-  STRUCT_FIELD_DECL(FFFormatContext,raw_packet_buffer_size), 
-  STRUCT_FIELD_DECL(FFFormatContext,missing_ts_warning), 
-  STRUCT_FIELD_DECL(FFFormatContext,inject_global_side_data), 
   STRUCT_FIELD_DECL(FFFormatContext,avoid_negative_ts_use_pts), 
-  STRUCT_FIELD_DECL(FFFormatContext,shortest_end), 
-  STRUCT_FIELD_DECL(FFFormatContext,initialized), 
-  STRUCT_FIELD_DECL(FFFormatContext,streams_initialized), 
   STRUCT_FIELD_DECL(FFFormatContext,id3v2_meta), 
-  STRUCT_FIELD_DECL(FFFormatContext,prefer_codec_framerate), 
-  STRUCT_FIELD_DECL(FFFormatContext,chapter_ids_monotonic), 
-  STRUCT_FIELD_DECL(FFFormatContext,metafree), 
+  STRUCT_FIELD_DECL(FFFormatContext,missing_streams), 
   { NULL } 
 };
 
@@ -823,7 +820,6 @@ static const avstruct_field_descriptor FFStream_field_list[] = {
   STRUCT_FIELD_DECL(FFStream,last_dts_for_order_check), 
   STRUCT_FIELD_DECL(FFStream,dts_ordered), 
   STRUCT_FIELD_DECL(FFStream,dts_misordered), 
-  STRUCT_FIELD_DECL(FFStream,inject_global_side_data), 
   STRUCT_FIELD_DECL(FFStream,display_aspect_ratio), 
   STRUCT_FIELD_DECL(FFStream,probe_data), 
   STRUCT_FIELD_DECL(FFStream,last_in_packet_buffer), 
@@ -920,6 +916,15 @@ static const avstruct_field_descriptor FFIOContext_field_list[] = {
   STRUCT_FIELD_DECL(FFIOContext,writeout_count), 
   STRUCT_FIELD_DECL(FFIOContext,orig_buffer_size), 
   STRUCT_FIELD_DECL(FFIOContext,written_output_size), 
+  { NULL } 
+};
+
+static const avstruct_field_descriptor FFHWFramesContext_field_list[] = {
+  STRUCT_FIELD_DECL(FFHWFramesContext,p), 
+  STRUCT_FIELD_DECL(FFHWFramesContext,hw_type), 
+  STRUCT_FIELD_DECL(FFHWFramesContext,pool_internal), 
+  STRUCT_FIELD_DECL(FFHWFramesContext,source_frames), 
+  STRUCT_FIELD_DECL(FFHWFramesContext,source_allocation_map_flags), 
   { NULL } 
 };
 

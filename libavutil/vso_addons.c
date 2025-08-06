@@ -12,6 +12,7 @@
 
 #include "libavformat/avio_internal.h"
 #include "libavformat/avformat.h"
+#include "libavformat/avformat_internal.h"
 #include "libavformat/internal.h"
 #include "libavformat/mux.h"
 #include "libavformat/url.h"
@@ -110,7 +111,9 @@ static const avstruct_descriptor struct_list[] = {
     STRUCT_ITEM_DECL(FFFrac,"libavformat/internal.h"),
     STRUCT_ITEM_DECL(FFFormatContext,"libavformat/internal.h"),
     STRUCT_ITEM_DECL(FFStream,"libavformat/internal.h"),
-    STRUCT_ITEM_DECL(FFStreamGroup,"libavformat/internal.h"),
+
+    /* libavformat/avformat_internal.h */
+    STRUCT_ITEM_DECL(FFStreamGroup,"libavformat/avformat_internal.h"),
     
     /* libavformat/url.h */
     STRUCT_ITEM_DECL(URLContext,"libavformat/url.h"),

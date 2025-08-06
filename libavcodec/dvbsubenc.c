@@ -258,7 +258,8 @@ static int dvb_encode_rle8(uint8_t **pq, int buf_size,
             x += len;
         }
         /* end of line */
-        // 00000000 end of 8-bit/pixel_code_string
+        // 00000000 00000000 end of 8-bit/pixel_code_string
+        *q++ = 0x00;
         *q++ = 0x00;
         *q++ = 0xf0;
         bitmap += linesize;
@@ -282,6 +283,9 @@ static int dvbsub_encode(AVCodecContext *avctx, uint8_t *outbuf, int buf_size,
     page_id = 1;
 
     if (h->num_rects && !h->rects)
+        return AVERROR(EINVAL);
+
+    if (h->num_rects >= 256)
         return AVERROR(EINVAL);
 
     if (avctx->width > 0 && avctx->height > 0) {
@@ -326,24 +330,23 @@ static int dvbsub_encode(AVCodecContext *avctx, uint8_t *outbuf, int buf_size,
 
     if (h->num_rects) {
         for (clut_id = 0; clut_id < h->num_rects; clut_id++) {
-            if (buf_size < 6 + h->rects[clut_id]->nb_colors * 6)
-                return AVERROR_BUFFER_TOO_SMALL;
-
             /* CLUT segment */
 
-            if (h->rects[clut_id]->nb_colors <= 4) {
+            if (h->rects[clut_id]->nb_colors <= 4U) {
                 /* 2 bpp, some decoders do not support it correctly */
                 bpp_index = 0;
-            } else if (h->rects[clut_id]->nb_colors <= 16) {
+            } else if (h->rects[clut_id]->nb_colors <= 16U) {
                 /* 4 bpp, standard encoding */
                 bpp_index = 1;
-            } else if (h->rects[clut_id]->nb_colors <= 256) {
+            } else if (h->rects[clut_id]->nb_colors <= 256U) {
                 /* 8 bpp, standard encoding */
                 bpp_index = 2;
             } else {
                 return AVERROR(EINVAL);
             }
 
+            if (buf_size < 6 + h->rects[clut_id]->nb_colors * 6)
+                return AVERROR_BUFFER_TOO_SMALL;
 
             /* CLUT segment */
             *q++ = 0x0f; /* sync byte */
