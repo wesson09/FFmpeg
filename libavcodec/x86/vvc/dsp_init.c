@@ -74,7 +74,6 @@ static void vvc_apply_bdof_##bd##_##opt(uint8_t *dst, ptrdiff_t dst_stride,     
 OF_FUNC( 8, avx2)
 OF_FUNC(10, avx2)
 OF_FUNC(12, avx2)
-#endif
 
 #define OF_INIT(bd) c->inter.apply_bdof = vvc_apply_bdof_##bd##_avx2
 #endif
@@ -342,6 +341,8 @@ int ff_vvc_sad_avx2(const int16_t *src0, const int16_t *src1, int dx, int dy, in
 
 #endif
 
+
+#endif // ARCH_X86_64
 
 void ff_vvc_dsp_init_x86(VVCDSPContext *const c, const int bd)
 {
