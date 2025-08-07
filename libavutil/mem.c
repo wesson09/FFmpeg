@@ -66,12 +66,27 @@ void  free(void *ptr);
 
 #define FF_MEMORY_POISON 0x2a
 
+/* prototypes */
+void *ff_internal_malloc(size_t size);
+void *ff_internal_realloc(void *ptr, size_t size);
+void ff_internal_free(void *ptr);
+
+
 /* NOTE: if you want to override these functions with your own
  * implementations (not recommended) you have to link libav* as
  * dynamic libraries and remove -Wl,-Bsymbolic from the linker flags.
  * Note that this will cost performance. */
 
 static atomic_size_t max_alloc_size = INT_MAX;
+
+static atomic_int_fast32_t nb_outstanding_alloc = ATOMIC_VAR_INIT(0);
+static atomic_int_fast32_t has_custom_allocator = ATOMIC_VAR_INIT(0);
+static AVCustomAllocator g_allocator = {
+    .min_align  = ALIGN, 
+    .malloc_fn  = &ff_internal_malloc,
+    .realloc_fn = &ff_internal_realloc,
+    .free_fn    = &ff_internal_free
+};
 
 void av_max_alloc(size_t max){
     atomic_store_explicit(&max_alloc_size, max, memory_order_relaxed);
@@ -569,28 +584,54 @@ int av_size_mult(size_t a, size_t b, size_t *r)
     return size_mult(a, b, r);
 }
 
-static atomic_int_fast32_t nb_outstanding_alloc = ATOMIC_VAR_INIT(0);
+int av_install_memory_manager(const AVCustomAllocator *allocator) {
 
-static AVCustomAllocator *g_allocator = NULL;
-
-int av_install_malloc_provider(const AVCustomAllocator * allocator) {
-
-    if ( allocator && 
-        ((allocator->min_align < ALIGN) || 
-        (!allocator->custom_malloc) ||
-        (!allocator->custom_realloc) ||
-        (!allocator->custom_free))) {
+    if (!allocator) {
         return AVERROR(EINVAL);
     }
-    if (allocator == g_allocator) {
+    if (has_custom_allocator)
+    {
+        /* already installed, don't change */
+        return AVERROR(EALREADY);
+    }
+
+    if ((allocator->malloc_fn) &&
+        (allocator->realloc_fn) &&
+        (allocator->free_fn) && 
+        (allocator->min_align >= ALIGN)) {
+
+        atomic_int_fast32_t nb_allocs = atomic_fetch_add_explicit(&nb_outstanding_alloc,0,memory_order_relaxed);
+        if (nb_allocs > 0) {
+            /* there is outstanding allocation, so we can''t install a custom allocator so far */
+            return AVERROR(EBUSY);
+        }
+        /* install allocator, return in struct the default memory function */
+        atomic_store_explicit(&g_allocator.malloc_fn,allocator->malloc_fn,memory_order_relaxed);
+        atomic_store_explicit(&g_allocator.realloc_fn,allocator->realloc_fn,memory_order_relaxed);
+        atomic_store_explicit(&g_allocator.free_fn,allocator->free_fn,memory_order_relaxed);
+        atomic_store_explicit(&g_allocator.min_align,allocator->min_align,memory_order_relaxed);
+        atomic_store_explicit(&has_custom_allocator,1,memory_order_relaxed);
+        return 0;
+    } else {
+        return AVERROR(EINVAL);
+    }
+}
+
+int av_default_memory_manager(AVCustomAllocator *allocator) {
+    if (!allocator) {
+        return AVERROR(EINVAL);
+    }
+    allocator->malloc_fn = &ff_internal_malloc;
+    allocator->realloc_fn = &ff_internal_realloc;
+    allocator->free_fn = &ff_internal_free;
+    allocator->min_align = ALIGN;
+    if (has_custom_allocator)
+    {
+        /* already installed */
+        return AVERROR(EALREADY);
+    } else {
         return 0;
     }
-    atomic_int_fast32_t nb_allocs = atomic_fetch_add_explicit(&nb_outstanding_alloc,0,memory_order_relaxed);
-    if (nb_allocs > 0) {
-        return AVERROR(EBUSY);
-    }
-    atomic_store_explicit(&g_allocator,allocator,memory_order_relaxed);
-    return 0;
 }
 
 int av_min_align() {
@@ -599,11 +640,7 @@ int av_min_align() {
 
 void * av_malloc(size_t size) {
     void * ret;
-    if (g_allocator) {
-        ret = g_allocator->custom_malloc(size);
-    } else {
-        ret = ff_internal_malloc(size);
-    }
+    ret = g_allocator.malloc_fn(size);
     if (ret) {
         atomic_fetch_add_explicit(&nb_outstanding_alloc,1,memory_order_relaxed);
     }
@@ -612,11 +649,7 @@ void * av_malloc(size_t size) {
 
 void * av_realloc(void * ptr, size_t size) {
     void * ret;
-    if (g_allocator) {
-        ret = g_allocator->custom_realloc(ptr,size);
-    } else {
-        ret = ff_internal_realloc(ptr,size);
-    }
+    ret = g_allocator.realloc_fn(ptr,size);
     if (ret) {
         if (!ptr)
             atomic_fetch_add_explicit(&nb_outstanding_alloc,1,memory_order_relaxed);
@@ -628,11 +661,7 @@ void * av_realloc(void * ptr, size_t size) {
 }
 
 void av_free(void *ptr) {
-    if (g_allocator) {
-        g_allocator->custom_free(ptr);
-    } else {
-        ff_internal_free(ptr);
-    }
+    g_allocator.free_fn(ptr);
     if (ptr) {
         atomic_fetch_add_explicit(&nb_outstanding_alloc,-1,memory_order_relaxed);
     }

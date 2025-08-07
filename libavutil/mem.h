@@ -604,19 +604,46 @@ void av_max_alloc(size_t max);
  * @}
  */
 
-void *ff_internal_malloc(size_t size);
-void *ff_internal_realloc(void *ptr, size_t size);
-void ff_internal_free(void *ptr);
 
+
+
+/**
+ * structure to provide/receive a custom memory allocator
+ * used to provide an alternative memory manager.
+ */
 typedef struct AVCustomAllocator {
     int min_align;
-    void * (*custom_malloc) (size_t size);
-    void * (*custom_realloc) (void * ptr, size_t size);
-    void (*custom_free)(void *ptr);
+    void * (*malloc_fn) (size_t size);
+    void * (*realloc_fn) (void * ptr, size_t size);
+    void (*free_fn)(void *ptr);
 } AVCustomAllocator;
 
-int av_install_malloc_provider(const AVCustomAllocator * allocator);
+/**
+ * install a custom memory manager.
+ *
+ * @param[in]  allocator   the custom memory allocator
+ * @return 0 on success, 
+ * AVERROR(EINVAL) if allocator is NULL
+ * AVERROR(EALREADY) if allocator is already installed
+ * AVERROR(EBUSY) if there is some memory already allocated therefore the manager can't be installed
+ */
+int av_install_memory_manager(const AVCustomAllocator *allocator);
 
+/**
+ * return the default memory manager
+ *
+ * @param[out]  allocator   the struct that will receive the function addresses
+ * @return 0 on success, 
+ * AVERROR(EINVAL) if allocator is NULL
+ * AVERROR(EALREADY) if allocator is already installed
+ */
+int av_default_memory_manager(AVCustomAllocator *allocator);
+
+/**
+ * get the minimum memory alignment needed.
+ *
+ * @return the memory alignment (64)
+ */
 int av_min_align(void);
 
 
